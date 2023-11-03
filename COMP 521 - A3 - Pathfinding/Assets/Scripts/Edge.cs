@@ -12,6 +12,6 @@ public class Edge
     {
         a = p_a;
         b = p_b;
-        distance = (a.GetPosition() - b.Getposition()).magnitude;
+        distance = (a.GetPosition() - b.GetPosition()).magnitude;
     }
 }
