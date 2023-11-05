@@ -60,8 +60,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets/Scripts/NavMesh.cs" />
-    <Compile Include="Assets/Scripts/Partition.cs" />
     <Compile Include="Assets/Scripts/Edge.cs" />
+    <Compile Include="Assets/Scripts/Partition.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
