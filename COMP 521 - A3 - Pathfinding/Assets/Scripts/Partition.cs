@@ -6,18 +6,18 @@ using UnityEngine.UIElements;
 
 public class Partition
 {
-    Vector2 position;
-    GameObject occupant;
+    Vector3 position;
+    GameObject occupied;
     List<Edge> edges;
 
-    public Partition(Vector2 pos)
+    public Partition(Vector3 pos)
     {
         position = pos;
-        occupant = null;
+        occupied = null;
         edges = new List<Edge>();
     }
 
-    public Vector2 GetPosition()
+    public Vector3 GetPosition()
     {
         return position;
     }
@@ -27,39 +27,78 @@ public class Partition
         return edges;
     }
 
-    public void Draw(Color partColor, Color edgeColor)
+    public GameObject GetOccupied() { return occupied; }
+    public Partition SetOccupied(GameObject g) { occupied = g; return this; }
+
+    public List<Partition> GetConnectedPartitions()
+    {
+        List<Partition> connectedParts = new List<Partition>();
+
+        foreach(Edge e in edges)
+        {
+            connectedParts.Add((e.a == this)? e.b : e.a);
+        }
+
+        return connectedParts;
+    }
+
+    public float GetDistanceToPartition(Partition part)
+    {
+        foreach(Edge e in edges)
+        {
+            if (e.a == part || e.b == part)
+            {
+                return e.distance;
+            }
+        }
+
+        throw new Exception("Partition not connected");
+    }
+
+    public void DrawWithEdges(Color partColor, Color edgeColor)
     {
         float[] xs = {position.x-0.5f, position.x+0.5f};
-        float[] ys = {position.y-0.5f, position.y+0.5f};
+        float[] zs = {position.z-0.5f, position.z+0.5f};
         
-        Debug.DrawLine(new Vector3(xs[0], 0, ys[0]), new Vector3(xs[0], 0, ys[1]), partColor, 100f);
-        Debug.DrawLine(new Vector3(xs[0], 0, ys[1]), new Vector3(xs[1], 0, ys[1]), partColor, 100f);
-        Debug.DrawLine(new Vector3(xs[1], 0, ys[0]), new Vector3(xs[0], 0, ys[0]), partColor, 100f);
-        Debug.DrawLine(new Vector3(xs[1], 0, ys[1]), new Vector3(xs[1], 0, ys[0]), partColor, 100f);
+        Debug.DrawLine(new Vector3(xs[0], 0, zs[0]), new Vector3(xs[0], 0, zs[1]), partColor, 100f);
+        Debug.DrawLine(new Vector3(xs[0], 0, zs[1]), new Vector3(xs[1], 0, zs[1]), partColor, 100f);
+        Debug.DrawLine(new Vector3(xs[1], 0, zs[0]), new Vector3(xs[0], 0, zs[0]), partColor, 100f);
+        Debug.DrawLine(new Vector3(xs[1], 0, zs[1]), new Vector3(xs[1], 0, zs[0]), partColor, 100f);
 
         foreach (Edge e in edges)
         {
-            if(e.distance > 1)
+            if(e.distance > 0)
             {
                 if (e.a == this)
                 {
                     if (e.b.position.x < position.x || e.b.position.y < position.y)
                     {
-                        Debug.DrawLine(new Vector3(e.b.position.x, 0, e.b.position.y), new Vector3(e.a.position.x, 0, e.a.position.y), edgeColor, 100f);
+                        Debug.DrawLine(e.b.position, e.a.position, edgeColor, 100f);
                     }
                 } else 
                 {
                     if (e.a.position.x < position.x || e.a.position.y < position.y)
                     {
-                        Debug.DrawLine(new Vector3(e.b.position.x, 0, e.b.position.y), new Vector3(e.a.position.x, 0, e.a.position.y), edgeColor, 100f);
+                        Debug.DrawLine(e.b.position, e.a.position, edgeColor, 100f);
                     }
                 }
             }
         }
     }
+    
+    public void Draw(Color partColor)
+    {
+        float[] xs = {position.x-0.5f, position.x+0.5f};
+        float[] zs = {position.z-0.5f, position.z+0.5f};
+        
+        Debug.DrawLine(new Vector3(xs[0], 0, zs[0]), new Vector3(xs[0], 0, zs[1]), partColor);
+        Debug.DrawLine(new Vector3(xs[0], 0, zs[1]), new Vector3(xs[1], 0, zs[1]), partColor);
+        Debug.DrawLine(new Vector3(xs[1], 0, zs[0]), new Vector3(xs[0], 0, zs[0]), partColor);
+        Debug.DrawLine(new Vector3(xs[1], 0, zs[1]), new Vector3(xs[1], 0, zs[0]), partColor);
+    }
 
     public override string ToString()
     {
-        return "Partition with pos: "+position.ToString();
+        return "Partition at "+position.ToString();
     }
 }

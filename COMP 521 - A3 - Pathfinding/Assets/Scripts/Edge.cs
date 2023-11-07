@@ -14,4 +14,9 @@ public class Edge
         b = p_b;
         distance = (a.GetPosition() - b.GetPosition()).magnitude;
     }
+
+    public override string ToString()
+    {
+        return "Edge from "+a+" to "+b;
+    }
 }

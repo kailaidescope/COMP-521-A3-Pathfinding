@@ -6,15 +6,17 @@ using UnityEngine.ProBuilder;
 
 public class NavMesh : MonoBehaviour
 {
-    [SerializeField] Vector2[] referencePlaneCorners = new Vector2[2];
+    public Transform startTransform;
+    public Transform endTransform;
+    public Vector2[] referencePlaneCorners = new Vector2[2];
     [SerializeField] float height;
 
     private List<List<Partition>> partitions;
     float xStorageOffset;
-    float yStorageOffset;
+    float zStorageOffset;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         GenerateNavMesh();
 
@@ -22,10 +24,27 @@ public class NavMesh : MonoBehaviour
         {
             foreach (Partition p in ps)
             {
-                p.Draw(Color.yellow, Color.red);
+                //p.Draw(Color.yellow, Color.red);
             }
         }
 
+        Partition start = partitions[0][0]; 
+        Partition end = partitions[partitions.Count-1][partitions[partitions.Count-1].Count-1]; 
+
+        var path = AStar.FindPath(start, end);
+        
+        for(int i = 0; i < path.Count-1; i++)
+        {
+            Debug.DrawLine(new Vector3(path[i].GetPosition().x, 0, path[i].GetPosition().y), 
+                        new Vector3(path[i+1].GetPosition().x, 0, path[i+1].GetPosition().y), Color.red, 1f);
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //CaclulateAndDrawDummyPath();
+        DrawOccupiedPartitions();
     }
 
     void GenerateNavMesh()
@@ -34,20 +53,20 @@ public class NavMesh : MonoBehaviour
 
         float minx = Mathf.Min(referencePlaneCorners[0].x, referencePlaneCorners[1].x);
         float maxx = Mathf.Max(referencePlaneCorners[0].x, referencePlaneCorners[1].x) - 1;
-        float miny = Mathf.Min(referencePlaneCorners[0].y, referencePlaneCorners[1].y);
-        float maxy = Mathf.Max(referencePlaneCorners[0].y, referencePlaneCorners[1].y) - 1;
+        float minz = Mathf.Min(referencePlaneCorners[0].y, referencePlaneCorners[1].y);
+        float maxz = Mathf.Max(referencePlaneCorners[0].y, referencePlaneCorners[1].y) - 1;
 
         xStorageOffset = -minx - 0.5f;
-        yStorageOffset = -miny - 0.5f;
+        zStorageOffset = -minz - 0.5f;
 
         for (float x = minx; x <= maxx; x++)
         {
             partitions.Add(new List<Partition>());
 
-            for (float y = miny; y <= maxy; y++)
+            for (float z = minz; z <= maxz; z++)
             {
                 //Debug.Log("("+x+","+y+")");
-                Partition p = new Partition(new Vector2(x+0.5f, y+0.5f));
+                Partition p = new Partition(new Vector3(x+0.5f, 0f, z+0.5f));
 
                 partitions[(int)(p.GetPosition().x + xStorageOffset)].Add(p);
 
@@ -61,23 +80,50 @@ public class NavMesh : MonoBehaviour
                 if (x > minx)
                 {
                     // Connect to left node
-                    AddEdge(p, GetPartition(x-0.5f, y+0.5f));
+                    AddEdge(p, GetPartition(new Vector3(x-0.5f, 0f, z+0.5f)));
 
-                    if (y < maxy)
+                    if (z < maxz)
                     {
                         // Connect to upper-left node
-                        AddEdge(p, GetPartition(x-0.5f, y+1.5f));
+                        AddEdge(p, GetPartition(new Vector3(x-0.5f, 0f, z+1.5f)));
                     }
-                    if(y > miny)
+                    if(z > minz)
                     {
                         // Connect to lower-left node
-                        AddEdge(p, GetPartition(x-0.5f, y-0.5f));
+                        AddEdge(p, GetPartition(new Vector3(x-0.5f, 0f, z-0.5f)));
                     }
                 }
-                if (y > miny)
+                if (z > minz)
                 {
                     // Connect to lower node
-                    AddEdge(p, GetPartition(x+0.5f,y-0.5f));
+                    AddEdge(p, GetPartition(new Vector3(x+0.5f, 0f, z-0.5f)));
+                }
+            }
+        }
+    }
+
+    void CaclulateAndDrawDummyPath()
+    {
+        Partition pStart = GetPartition(startTransform.position);
+        Partition pEnd = GetPartition(endTransform.position);
+
+        var path = AStar.FindPath(pStart, pEnd);
+        
+        for(int i = 0; i < path.Count-1; i++)
+        {
+            Debug.DrawLine(path[i].GetPosition(), path[i+1].GetPosition(), Color.red, 0.5f);
+        }
+    }
+
+    void DrawOccupiedPartitions()
+    {
+        foreach (List<Partition> parts in partitions)
+        {
+            foreach (Partition p in parts)
+            {
+                if (p.GetOccupied() != null)
+                {
+                    p.Draw(Color.yellow);
                 }
             }
         }
@@ -91,16 +137,24 @@ public class NavMesh : MonoBehaviour
         b.GetEdges().Add(edge);
     }
 
-    Partition GetPartition(float x, float y)
+    public Partition GetPartition(Vector3 v)
     {
-        //Debug.Log("x = "+(int)(x+xStorageOffset)+", y = "+(int)(y+yStorageOffset));
-        return partitions[(int)(x+xStorageOffset)][(int)(y+yStorageOffset)];
+        float x = Mathf.Floor(v.x) + 0.5f;
+        float z = Mathf.Floor(v.z) + 0.5f;
+
+        //Debug.Log("("+v.x+","+v.z+"), "+"("+x+","+z+")");
+        //Debug.Log("x = "+(int)(x+xStorageOffset)+", z = "+(int)(z+zStorageOffset) +"["+partitions.Count+"],["+partitions[0].Count+"]");
+        return partitions[(int)(x+xStorageOffset)][(int)(z+zStorageOffset)];
     }
 
-    // Update is called once per frame
-    void Update()
+    public List<List<Partition>> GetPartitions()
     {
-        
+        return partitions;
+    }
+
+    public Transform GetGoal()
+    {
+        return endTransform;
     }
 
     void OnDrawGizmosSelected()
