@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Human : MonoBehaviour
 {
-    public static float speed = 4f;
+    public static float speed = 5f;
     private NavMesh navMesh;
     private Transform target;
     private Vector3 lastTargetPosition;
