@@ -6,16 +6,23 @@ using UnityEngine;
 public class Human : MonoBehaviour
 {
     public static float speed = 5f;
+    public static int recalculateBlockedPathDistance = 1;
     private NavMesh navMesh;
     private Transform target;
     private Vector3 lastTargetPosition;
     private List<Partition> path;
     private List<Partition> occupiedSpace;
+    private float occupationRadius;
+    private CapsuleCollider collider;
 
     // Start is called before the first frame update
     void Start()
     {
         navMesh = FindObjectOfType<NavMesh>();
+        collider = GetComponent<CapsuleCollider>();
+
+        occupationRadius = collider.radius;
+
         var parts = navMesh.GetPartitions();
 
         int x = Random.Range(0, parts.Count);
@@ -32,19 +39,38 @@ public class Human : MonoBehaviour
         lastTargetPosition = target.position;
         path = AStar.FindPath(navMesh.GetPartition(transform.position), navMesh.GetPartition(target.position));
 
-        occupiedSpace = new List<Partition>();
-        occupiedSpace.Add(startPartition);
+        occupiedSpace = new List<Partition>{ startPartition };
     }
 
     // Update is called once per frame
     void Update()
     {
-        // Update what space is taken up by this object
+        //UpdateOccupiedSpace();
+        HandleBlockedPath();
+        MoveToTarget();
+        DrawPath();
+    }
+
+    // Update what space is taken up by this object 
+    void UpdateOccupiedSpace()
+    {
         List<Partition> newOccupied = new List<Partition>();
 
-        newOccupied.Add(navMesh.GetPartition(transform.position).SetOccupied(gameObject));
+        Vector3 forward = transform.position + transform.forward * occupationRadius;
+        Vector3 back = transform.position + -transform.forward * occupationRadius;
+        Vector3 right = transform.position + transform.right * occupationRadius;
+        Vector3 left = transform.position + -transform.right * occupationRadius;
 
-        if(path.Count > 0 && path[0] != navMesh.GetPartition(transform.position)) { newOccupied.Add(path[0].SetOccupied(gameObject)); }
+        foreach (Vector3 v in new Vector3[]{forward, back, right, left})
+        {
+            Partition p = navMesh.GetPartition(v);
+            if (!newOccupied.Contains(p))
+            {
+                newOccupied.Add(p);
+            }
+        }
+
+        if(path.Count > 0 && !occupiedSpace.Contains(navMesh.GetPartition(path[0].GetPosition()))) { newOccupied.Add(path[0].SetOccupied(gameObject)); }
         
         foreach (Partition p in occupiedSpace)
         {
@@ -55,18 +81,16 @@ public class Human : MonoBehaviour
         }
 
         occupiedSpace = newOccupied;
+    }
 
-        /* foreach (Partition p in occupiedSpace)
-        {
-            p.Draw(Color.yellow);
-        } */
-
-        // Recalculates path when position of target changes or path is blocked
+    // Recalculates path when position of target changes or path is blocked
+    void HandleBlockedPath()
+    {
         bool blocked = false;
 
-        foreach (Partition p in path)
+        for (int i = 0; i < Mathf.Min(path.Count, recalculateBlockedPathDistance); i++)
         {
-            if (p.GetOccupied() != null && p.GetOccupied() != gameObject)
+            if (path[i].GetOccupied() != null && path[i].GetOccupied() != gameObject)
             {
                 blocked = true;
             }
@@ -77,8 +101,11 @@ public class Human : MonoBehaviour
             path = AStar.FindPath(navMesh.GetPartition(transform.position), navMesh.GetPartition(target.position), gameObject);
             lastTargetPosition = target.position;
         }
+    }
 
-        // Handles movement towards target
+    // Handles movement towards target
+    void MoveToTarget()
+    {
         if (path.Count > 0)
         {
             // Check if the position of the human and target are approximately equal.
@@ -95,7 +122,6 @@ public class Human : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, path[0].GetPosition() + Vector3.up.normalized, step);
             }
         }
-        DrawPath();
     }
 
     // Draws path in debug window

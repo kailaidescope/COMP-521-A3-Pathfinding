@@ -1,25 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class Partition
+public class Partition : MonoBehaviour
 {
-    Vector3 position;
-    GameObject occupied;
-    List<Edge> edges;
-
-    public Partition(Vector3 pos)
-    {
-        position = pos;
-        occupied = null;
-        edges = new List<Edge>();
-    }
+    GameObject occupied = null;
+    List<Edge> edges = new List<Edge>();
 
     public Vector3 GetPosition()
     {
-        return position;
+        return transform.position;
     }
 
     public List<Edge> GetEdges()
@@ -57,8 +50,8 @@ public class Partition
 
     public void DrawWithEdges(Color partColor, Color edgeColor)
     {
-        float[] xs = {position.x-0.5f, position.x+0.5f};
-        float[] zs = {position.z-0.5f, position.z+0.5f};
+        float[] xs = {GetPosition().x-0.5f, GetPosition().x+0.5f};
+        float[] zs = {GetPosition().z-0.5f, GetPosition().z+0.5f};
         
         Debug.DrawLine(new Vector3(xs[0], 0, zs[0]), new Vector3(xs[0], 0, zs[1]), partColor, 100f);
         Debug.DrawLine(new Vector3(xs[0], 0, zs[1]), new Vector3(xs[1], 0, zs[1]), partColor, 100f);
@@ -71,15 +64,15 @@ public class Partition
             {
                 if (e.a == this)
                 {
-                    if (e.b.position.x < position.x || e.b.position.y < position.y)
+                    if (e.b.GetPosition().x < GetPosition().x || e.b.GetPosition().y < GetPosition().y)
                     {
-                        Debug.DrawLine(e.b.position, e.a.position, edgeColor, 100f);
+                        Debug.DrawLine(e.b.GetPosition(), e.a.GetPosition(), edgeColor, 100f);
                     }
                 } else 
                 {
-                    if (e.a.position.x < position.x || e.a.position.y < position.y)
+                    if (e.a.GetPosition().x < GetPosition().x || e.a.GetPosition().y < GetPosition().y)
                     {
-                        Debug.DrawLine(e.b.position, e.a.position, edgeColor, 100f);
+                        Debug.DrawLine(e.b.GetPosition(), e.a.GetPosition(), edgeColor, 100f);
                     }
                 }
             }
@@ -88,8 +81,8 @@ public class Partition
     
     public void Draw(Color partColor)
     {
-        float[] xs = {position.x-0.5f, position.x+0.5f};
-        float[] zs = {position.z-0.5f, position.z+0.5f};
+        float[] xs = {GetPosition().x-0.5f, GetPosition().x+0.5f};
+        float[] zs = {GetPosition().z-0.5f, GetPosition().z+0.5f};
         
         Debug.DrawLine(new Vector3(xs[0], 0, zs[0]), new Vector3(xs[0], 0, zs[1]), partColor);
         Debug.DrawLine(new Vector3(xs[0], 0, zs[1]), new Vector3(xs[1], 0, zs[1]), partColor);
@@ -99,6 +92,22 @@ public class Partition
 
     public override string ToString()
     {
-        return "Partition at "+position.ToString();
+        return "Partition at "+GetPosition().ToString();
+    }
+
+    void OnTriggerEnter(Collider collider)
+    {
+        if (occupied == null && collider.gameObject.tag.Equals("Mover"))
+        {
+            occupied = collider.gameObject;
+        }
+    }
+
+    void OnTriggerExit(Collider collider)
+    {
+        if (occupied != null && collider.gameObject == occupied)
+        {
+            occupied = null;
+        }
     }
 }

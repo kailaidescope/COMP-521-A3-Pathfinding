@@ -6,6 +6,7 @@ using UnityEngine.ProBuilder;
 
 public class NavMesh : MonoBehaviour
 {
+    public GameObject partitionPrefab;
     public Transform startTransform;
     public Transform endTransform;
     public Vector2[] referencePlaneCorners = new Vector2[2];
@@ -65,10 +66,12 @@ public class NavMesh : MonoBehaviour
 
             for (float z = minz; z <= maxz; z++)
             {
-                //Debug.Log("("+x+","+y+")");
-                Partition p = new Partition(new Vector3(x+0.5f, 0f, z+0.5f));
+                //Debug.Log("("+x+","+z+")");
+                Partition p = Instantiate(partitionPrefab, gameObject.transform).GetComponent<Partition>();
+                p.transform.position = new Vector3(x+0.5f, 0f, z+0.5f);
 
                 partitions[(int)(p.GetPosition().x + xStorageOffset)].Add(p);
+                //Debug.Log(partitions[(int)(p.GetPosition().x + xStorageOffset)][(int)(p.GetPosition().z + zStorageOffset)]);
 
 /*                 int storagex = (int)(p.GetPosition().x + xStorageOffset);
                 int storagey = (int)(p.GetPosition().y + yStorageOffset);
@@ -143,7 +146,6 @@ public class NavMesh : MonoBehaviour
         float z = Mathf.Floor(v.z) + 0.5f;
 
         //Debug.Log("("+v.x+","+v.z+"), "+"("+x+","+z+")");
-        //Debug.Log("x = "+(int)(x+xStorageOffset)+", z = "+(int)(z+zStorageOffset) +"["+partitions.Count+"],["+partitions[0].Count+"]");
         return partitions[(int)(x+xStorageOffset)][(int)(z+zStorageOffset)];
     }
 
