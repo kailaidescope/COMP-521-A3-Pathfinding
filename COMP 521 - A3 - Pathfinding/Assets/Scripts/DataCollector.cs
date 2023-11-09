@@ -29,7 +29,7 @@ public class DataCollector : MonoBehaviour
         if (dataCollectionTimer < dataCollectionPeriod)
         {
             SaveFrameRate();
-            dataCollectionTimer += Time.deltaTime;
+            dataCollectionTimer += Time.unscaledDeltaTime;
         } else if (!timeUp)
         {
             LogResults();
@@ -41,7 +41,7 @@ public class DataCollector : MonoBehaviour
     {
         if( frameTimer < refreshTime )
         {
-            frameTimer += Time.deltaTime;
+            frameTimer += Time.unscaledDeltaTime;
             frameCounter++;
         }
         else
