@@ -105,7 +105,8 @@ public class AStar
             }
         }
 
-        throw new Exception("Path unable to be found");
+        //throw new Exception("Path unable to be found");
+        return null;
     }
 
     // Turns path created by FindPath into a list of partitions

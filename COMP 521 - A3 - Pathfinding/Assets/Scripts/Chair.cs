@@ -117,7 +117,7 @@ public class Chair : MonoBehaviour
     // Handles movement towards target
     void MoveToTarget()
     {
-        if (path.Count > 0)
+        if (path != null && path.Count > 0)
         {
             // Check if the position of the chair and next point on the path are approximately equal.
             if (Vector3.Distance(transform.position, path[0].GetPosition() + Vector3.up.normalized) < 0.001f)
@@ -138,9 +138,12 @@ public class Chair : MonoBehaviour
     // Draws path in debug window
     void DrawPath()
     {
-        for(int i = 0; i < path.Count-1; i++)
+        if (path != null) 
         {
-            Debug.DrawLine(path[i].GetPosition(), path[i+1].GetPosition(), Color.red);
+            for(int i = 0; i < path.Count-1; i++)
+            {
+                Debug.DrawLine(path[i].GetPosition(), path[i+1].GetPosition(), Color.red);
+            }
         }
     }
 

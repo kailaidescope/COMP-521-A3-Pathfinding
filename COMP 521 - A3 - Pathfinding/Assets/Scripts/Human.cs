@@ -51,16 +51,19 @@ public class Human : MonoBehaviour
     void HandleBlockedPath()
     {
         bool blocked = false;
-
-        for (int i = 0; i < Mathf.Min(path.Count, recalculateBlockedPathDistance + 1); i++)
+        if (path != null)
+        {
+            for (int i = 0; i < Mathf.Min(path.Count, recalculateBlockedPathDistance + 1); i++)
         {
             if (path[i].GetOccupied() != null && path[i].GetOccupied() != gameObject)
             {
                 blocked = true;
             }
         }
+        }
+        
 
-        if (lastTargetPosition != target.position || blocked)
+        if (path == null || lastTargetPosition != target.position || blocked)
         {
             path = AStar.FindPath(navMesh.GetPartition(transform.position), navMesh.GetPartition(target.position), gameObject);
             lastTargetPosition = target.position;
@@ -70,7 +73,7 @@ public class Human : MonoBehaviour
     // Handles movement towards target
     void MoveToTarget()
     {
-        if (path.Count > 0)
+        if (path != null && path.Count > 0)
         {
             // Check if the position of the human and the next point on the path are approximately equal.
             if (Vector3.Distance(transform.position, path[0].GetPosition() + Vector3.up.normalized) < 0.001f)
@@ -91,9 +94,12 @@ public class Human : MonoBehaviour
     // Draws path in debug window
     void DrawPath()
     {
-        for(int i = 0; i < path.Count-1; i++)
+        if (path != null) 
         {
-            Debug.DrawLine(path[i].GetPosition(), path[i+1].GetPosition(), Color.red);
+            for(int i = 0; i < path.Count-1; i++)
+            {
+                Debug.DrawLine(path[i].GetPosition(), path[i+1].GetPosition(), Color.red);
+            }
         }
     }
 

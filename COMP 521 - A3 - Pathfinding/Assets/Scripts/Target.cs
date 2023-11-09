@@ -27,7 +27,7 @@ public class Target : MonoBehaviour
 
         if (timer >= resetBoardTime)
         {
-            ResetPosition();
+            ResetPosition(false);
         }
     }
 
@@ -35,7 +35,7 @@ public class Target : MonoBehaviour
     {
         if (other.gameObject.tag.Equals("Human"))
         {
-            ResetPosition();
+            ResetPosition(true);
         }
     }
 
@@ -43,14 +43,17 @@ public class Target : MonoBehaviour
     {
         if (other.gameObject.tag.Equals("Human"))
         {
-            ResetPosition();
+            ResetPosition(true);
         }
     }
 
-    void ResetPosition()
+    void ResetPosition(bool successfulHit)
     {
         StartCoroutine(Wait());
         timer = 0f;
+
+        DataCollector.totalResets++;
+        DataCollector.successfulHits += successfulHit? 1 : 0;
 
         // Reset the targets of all chairs
         foreach (Chair c in Chair.chairs)
