@@ -97,7 +97,7 @@ public class Partition : MonoBehaviour
 
     void OnTriggerEnter(Collider collider)
     {
-        if (occupied == null && collider.gameObject.tag.Equals("Mover"))
+        if (occupied == null && collider.gameObject.tag.Equals("Chair") || collider.gameObject.tag.Equals("Human"))
         {
             occupied = collider.gameObject;
         }

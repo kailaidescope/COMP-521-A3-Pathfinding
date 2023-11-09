@@ -5,23 +5,21 @@ using UnityEngine;
 
 public class Human : MonoBehaviour
 {
+    public static List<Human> humans = new List<Human>();
     public static float speed = 5f;
     public static int recalculateBlockedPathDistance = 1;
+
     private NavMesh navMesh;
     private Transform target;
     private Vector3 lastTargetPosition;
     private List<Partition> path;
-    private List<Partition> occupiedSpace;
-    private float occupationRadius;
-    private CapsuleCollider collider;
 
     // Start is called before the first frame update
     void Start()
     {
-        navMesh = FindObjectOfType<NavMesh>();
-        collider = GetComponent<CapsuleCollider>();
+        humans.Add(this);
 
-        occupationRadius = collider.radius;
+        navMesh = FindObjectOfType<NavMesh>();
 
         var parts = navMesh.GetPartitions();
 
@@ -38,8 +36,6 @@ public class Human : MonoBehaviour
         target = navMesh.endTransform;
         lastTargetPosition = target.position;
         path = AStar.FindPath(navMesh.GetPartition(transform.position), navMesh.GetPartition(target.position));
-
-        occupiedSpace = new List<Partition>{ startPartition };
     }
 
     // Update is called once per frame
@@ -51,44 +47,12 @@ public class Human : MonoBehaviour
         DrawPath();
     }
 
-    // Update what space is taken up by this object 
-    void UpdateOccupiedSpace()
-    {
-        List<Partition> newOccupied = new List<Partition>();
-
-        Vector3 forward = transform.position + transform.forward * occupationRadius;
-        Vector3 back = transform.position + -transform.forward * occupationRadius;
-        Vector3 right = transform.position + transform.right * occupationRadius;
-        Vector3 left = transform.position + -transform.right * occupationRadius;
-
-        foreach (Vector3 v in new Vector3[]{forward, back, right, left})
-        {
-            Partition p = navMesh.GetPartition(v);
-            if (!newOccupied.Contains(p))
-            {
-                newOccupied.Add(p);
-            }
-        }
-
-        if(path.Count > 0 && !occupiedSpace.Contains(navMesh.GetPartition(path[0].GetPosition()))) { newOccupied.Add(path[0].SetOccupied(gameObject)); }
-        
-        foreach (Partition p in occupiedSpace)
-        {
-            if(!newOccupied.Contains(p))
-            {
-                p.SetOccupied(null);
-            }
-        }
-
-        occupiedSpace = newOccupied;
-    }
-
     // Recalculates path when position of target changes or path is blocked
     void HandleBlockedPath()
     {
         bool blocked = false;
 
-        for (int i = 0; i < Mathf.Min(path.Count, recalculateBlockedPathDistance); i++)
+        for (int i = 0; i < Mathf.Min(path.Count, recalculateBlockedPathDistance + 1); i++)
         {
             if (path[i].GetOccupied() != null && path[i].GetOccupied() != gameObject)
             {
@@ -108,7 +72,7 @@ public class Human : MonoBehaviour
     {
         if (path.Count > 0)
         {
-            // Check if the position of the human and target are approximately equal.
+            // Check if the position of the human and the next point on the path are approximately equal.
             if (Vector3.Distance(transform.position, path[0].GetPosition() + Vector3.up.normalized) < 0.001f)
             {
                 transform.position = path[0].GetPosition() + Vector3.up.normalized;
@@ -117,9 +81,9 @@ public class Human : MonoBehaviour
 
             if (path.Count > 0)
             {
-                // Move our position a step closer to the target.
-            var step =  speed * Time.deltaTime; // calculate distance to move
-            transform.position = Vector3.MoveTowards(transform.position, path[0].GetPosition() + Vector3.up.normalized, step);
+                // Move position a step closer to the target.
+                var step =  speed * Time.deltaTime; // calculate distance to move
+                transform.position = Vector3.MoveTowards(transform.position, path[0].GetPosition() + Vector3.up.normalized, step);
             }
         }
     }
@@ -131,5 +95,10 @@ public class Human : MonoBehaviour
         {
             Debug.DrawLine(path[i].GetPosition(), path[i+1].GetPosition(), Color.red);
         }
+    }
+
+    public List<Partition> GetPath()
+    {
+        return path;
     }
 }

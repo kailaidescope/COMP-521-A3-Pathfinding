@@ -66,6 +66,7 @@
     <Compile Include="Assets/Scripts/PriorityQueue.cs" />
     <Compile Include="Assets/Scripts/AStar.cs" />
     <Compile Include="Assets/Scripts/Human.cs" />
+    <Compile Include="Assets/Scripts/Chair.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
